@@ -16,17 +16,21 @@ namespace TDSM01.DSM
 {
   pubilc partial class DSM005 : UserControlBase
   {
-  
+    // 부서 정보를 담고 있을 테이블 
     DataTable _dtDept = new DataTable();
     
+    // 원가 요소를 담고 있을 테이블
     DataTable _dtBGTCODA = new DataTable();
     
+    //Excel Export 시 부서명 출력을 위한 테이블 
     DataTable _dt_dept_list = new DataTable();
     
+    //Excel Export 시 해당 파일의 로컬 주소를 담을 변수
     string _strOpenFilePath = string.Empty;
     
     string _strYear = string.Empty;
     
+    //Excel Import 시 Excel to DataTable 을 위한 칼럼명과 엑셀 파일의 해당 값의 컬럼 위치 값
     Dictionart<int,string> _ExcelColNM = new Dictionary<int,String>()
     {
       {1,"BGTCODA"},
@@ -53,6 +57,7 @@ namespace TDSM01.DSM
     
     Private void ComboBind()
     {
+      // 콤보 박스에 년도에 해당하는 값만 바인딩
       Data dtYear = new DataTable();
       dtYear.Columns.Add("YEAR",typeof(string));
       for(int i = 0; i <= 100; i++)
@@ -84,6 +89,7 @@ namespace TDSM01.DSM
         
         _strYear = lkuYear.EditValue.ToString();
         
+        // 동적 그리드 레이아웃을 위한 과정
         Delete_Grid_Band();
         Create_Grid_Band(dt);
         
@@ -102,6 +108,7 @@ namespace TDSM01.DSM
     
     Private void Delete_Grid_Band()
     {
+      // 그리드에 필수 요소를 제외한 초가 칼럼 요소들 삭제
       int ColNU = grvMain.Columns.Count;
       int BanNU = grvMain.Bands.Count;
       
@@ -114,6 +121,7 @@ namespace TDSM01.DSM
     
     Private void Create_Grid_Band(DataTable dt)
     {
+      // Oracle 칼럼 동적 리턴에 따라 칼럼 및 밴드 생성 및 
       string[] arrDept = btnDept.Text.Split('-');
       QueryParameterCollection parameters = new QueryParameterCollection();
       parameters.Add("USEDEPT",arrDept[0]);
@@ -137,6 +145,7 @@ namespace TDSM01.DSM
           BandedGridColumn col = new BandedGridColumn();
           col.FieldName = dt.Columns[(10 + j) + (i * 4)].ColumnName.ToString();
           col.Visible = true;
+          //j == 3 비고에 해당하는 값 비고 제외한 칼럼은 숫자 관련 필드 이기 때문에 Summary 추가 및 DisplayFormat 변경
           if(j != 3)
           {
             col.SummaryItem.SummaryType = DevExpress.Data.SummaryItemType.Sum;
@@ -148,6 +157,7 @@ namespace TDSM01.DSM
             
           }
           
+          // j == 0 || j == 3 는 입력을 위한 칼럼 이기때문에 배경 색 
           if(j == 0 || j == 3)
             col.AppearanceCell.BackColor = Color.FromArgb(255,224,192);
           else
@@ -196,6 +206,7 @@ namespace TDSM01.DSM
       }
       if(MsgBox.Show(this,"저장하시겠습니까?","질의",MessageBoxButtons.YesNo,ImageKinds,Question) != DialogResult.Yes)return;
       
+      //동적으로 생성된 칼럼에 따라 서로 다른 구조의 테이블 통일화를 위한 변환 과정
       DataTable dt = Convert_Save_Table(row.CopyToDataTable());
       try
       {
@@ -224,6 +235,8 @@ namespace TDSM01.DSM
       QueryResponse res = ZQxml.Default.ExecuteNonQuery("PKG_TDSM0005.TDSM0005_PLAN_BUDGET_IMPORT",parameters,QueryServiceTransactions.TxNone);
       var outputParameter = res.Parameters;
       DataTable MsgDt = Support.Get_MsgParamter(outputParameter);
+      
+      //ExcelMode시 해당 파일을 오픈 후 그 파일에 저장 행위에 대한 결과값 
       if(ExcelMode)
         OpenExcelFile(MsgDt);
       else
