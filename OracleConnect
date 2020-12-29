@@ -1,0 +1,80 @@
+class OracleConnect
+{
+
+  private const string connectionString = "Data Source = (DESCRIPTION = (FAILOVER = true)(LOAO_BALANCE = off))" +
+                                          "ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 000.000.000.000)(PORT = 0000)" +
+                                          "(ADDRESS = (PROTOCOL = TCP)(HOST = 000.000.000.000)(PORT = 0000)))" +
+                                          "CONNECT DATA = (FAILOVER_MODE = (BACKUP = "DEVDB")(TYPE = select)(METHOD = basic))(SERVICE_NAME = DEVDB)));" +
+                                          "user if = ****;password = ****";
+                      
+  //조회를 위한 메서드
+  public DataSet Read_Oracle_Data(string proName,Dictionary<string,object> p)
+  {
+    DataSet dt = new DataSet();
+    
+    using(OracleConnection = conn = new OracleConnection(connectionString))
+    {
+      OracleCommand cmd = new OracleCommand();
+      cmd.Connection = conn;
+      cmd.CommandText = proName;
+      cmd.CommandType = CommandType.StoreProcedure;
+      
+      //조회 프로시저 커서 값 
+      cmd.Parameters.Add("ORESULT_CUR",OracleDbType.RefCursor).Direction = ParamterDucrection.Output;
+      foreach(KeyValuePair<string,object> value in p)
+      {
+        cmd.Parameters.Add(value.Ket.ToString() , value.value.ToString());
+      }
+      
+      try
+      {
+        conn.Open();
+        cmd.ExecuteNonQuery();
+        OracleDataAdapter apr = new OracleDataAdapter(cmd);
+        apr.Fill(ds);
+      }
+      catch(Exception ex)
+      {
+        MessageBox.Show(ex.ToString());
+      }
+      finally
+      {
+        conn.Close();
+      }
+    }
+     return ds;
+  }
+  
+  public string[] Save_Oracle_Data(string proName,Dictionary<string,object> p)
+  {
+    string[] strReturn = new string[2];
+    using(OracleConnection = conn = new OracleConnection(connectionString))
+    {
+      OracleCommand cmd = new OracleCommand();
+      cmd.Connection = conn;
+      cmd.CommandText = proName;
+      cmd.CommandType = CommandType.StoreProcedure;
+      
+      foreach(KeyValuePair<string,object> value in p)
+      {
+        cmd.Parameters.Add(value.Ket.ToString() , value.value.ToString());
+      }
+      
+      try
+      {
+        conn.Open();
+        cmd.ExecuteNonQuery();
+        OracleDataAdapter apr = new OracleDataAdapter(cmd);
+        apr.Fill(ds);
+      }
+      catch(Exception ex)
+      {
+        MessageBox.Show(ex.ToString());
+      }
+      finally
+      {
+        conn.Close();
+      }
+    }
+  }
+}
